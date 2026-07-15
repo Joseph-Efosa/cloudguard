@@ -1,0 +1,73 @@
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ── Terraform ────────────────────────────────────────────────────────────────
+# State files can contain resource IDs and sensitive values
+terraform/**/.terraform/
+terraform/**/.terraform.lock.hcl
+terraform/**/terraform.tfstate
+terraform/**/terraform.tfstate.*
+terraform/**/*.tfplan
+*.tfvars
+*.tfvars.json
+
+# ── CloudGuard scan reports (contain GCP project names / resource IDs) ───────
+reports/
+cloudguard/reports/
+
+# ── Claude Code local settings ───────────────────────────────────────────────
+.claude/settings.local.json
+
+# ── macOS / IDE ──────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Node.js ──────────────────────────────────────────────────────────────────
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# ── Dissertation and presentation artefacts (not source code) ────────────────
+CloudGuard_Dissertation.docx
+CloudGuard_Progress_Report.pdf
+CloudGuard_Progress_Report.pptx
+build_dissertation.py
+build_presentation.py
+build_presentation.js
+generate_figures.py
+dissertation_figures/
+
+# ── Binary installers ────────────────────────────────────────────────────────
+*.pkg
+*.dmg
+*.exe
+
+# ── Credentials / secrets (belt-and-braces) ──────────────────────────────────
+*.pem
+*.key
+*.p12
+.env
+.env.*
+credentials.json
+service_account*.json

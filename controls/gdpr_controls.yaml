@@ -1,0 +1,208 @@
+version: "1.0"
+description: "CloudGuard GDPR Control Set — Articles 5, 25, 30, 32"
+
+controls:
+
+  # ── AWS Controls ────────────────────────────────────────────────────────────
+
+  - id: C-01
+    title: "S3 Default Server-Side Encryption"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: aws
+    service: s3
+    check: s3_encryption_enabled
+    description: "All S3 buckets must have default server-side encryption (SSE-S3 or SSE-KMS) enabled."
+    remediation: "Enable default encryption on each S3 bucket: aws s3api put-bucket-encryption --bucket <name> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\"}}]}'"
+
+  - id: C-02
+    title: "S3 Block Public Access"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: aws
+    service: s3
+    check: s3_public_access_blocked
+    description: "All four S3 public access block settings must be true on every bucket."
+    remediation: "Run: aws s3api put-public-access-block --bucket <name> --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+
+  - id: C-03
+    title: "CloudTrail Multi-Region Logging"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: aws
+    service: cloudtrail
+    check: cloudtrail_multiregion_enabled
+    description: "At least one CloudTrail trail must be multi-region and logging."
+    remediation: "Create or update a trail with --is-multi-region-trail and ensure logging is active."
+
+  - id: C-04
+    title: "CloudTrail Log File Validation"
+    article: "Art. 5"
+    gdpr_clause: "Integrity and confidentiality"
+    csp: aws
+    service: cloudtrail
+    check: cloudtrail_log_validation_enabled
+    description: "CloudTrail log file validation must be enabled to detect tampering."
+    remediation: "Update trail: aws cloudtrail update-trail --name <trail> --enable-log-file-validation"
+
+  - id: C-05
+    title: "RDS Storage Encryption"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: aws
+    service: rds
+    check: rds_encryption_enabled
+    description: "All RDS DB instances must have storage encryption enabled."
+    remediation: "RDS encryption can only be enabled at creation. Snapshot and restore the instance with encryption enabled."
+
+  - id: C-06
+    title: "KMS Customer-Managed Key Rotation"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing confidentiality of processing systems"
+    csp: aws
+    service: kms
+    check: kms_key_rotation_enabled
+    description: "All customer-managed KMS keys must have automatic key rotation enabled."
+    remediation: "Enable rotation: aws kms enable-key-rotation --key-id <key-id>"
+
+  - id: C-07
+    title: "IAM Root Account MFA"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: iam
+    check: iam_root_mfa_enabled
+    description: "The AWS root account must have MFA enabled."
+    remediation: "Enable MFA on the root account via the IAM console under Security credentials."
+
+  - id: C-08
+    title: "S3 Bucket Versioning"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design"
+    csp: aws
+    service: s3
+    check: s3_versioning_enabled
+    description: "S3 buckets holding personal data must have versioning enabled to support erasure audit trails."
+    remediation: "Enable versioning: aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled"
+
+  - id: C-09
+    title: "EBS Default Encryption"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: aws
+    service: ec2
+    check: ebs_default_encryption_enabled
+    description: "EBS default encryption must be enabled for the AWS account/region."
+    remediation: "Enable: aws ec2 enable-ebs-encryption-by-default"
+
+  - id: C-10
+    title: "AWS Config Recorder Active"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: aws
+    service: config
+    check: config_recorder_enabled
+    description: "AWS Config must have an active configuration recorder to maintain resource change history."
+    remediation: "Start the Config recorder: aws configservice start-configuration-recorder --configuration-recorder-name default"
+
+  # ── GCP Controls ────────────────────────────────────────────────────────────
+
+  - id: C-11
+    title: "Cloud Storage CMEK Encryption"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: gcp
+    service: storage
+    check: gcs_cmek_enabled
+    description: "Cloud Storage buckets must use a customer-managed encryption key (CMEK)."
+    remediation: "Set a default KMS key on the bucket: gcloud storage buckets update gs://<bucket> --default-encryption-key=<kms-key-resource-id>"
+
+  - id: C-12
+    title: "Cloud Storage Public Access Prevention"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: gcp
+    service: storage
+    check: gcs_public_access_prevention
+    description: "Cloud Storage buckets must have publicAccessPrevention set to 'enforced'."
+    remediation: "gcloud storage buckets update gs://<bucket> --public-access-prevention"
+
+  - id: C-13
+    title: "Cloud Audit Logs — DATA_READ"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: gcp
+    service: logging
+    check: audit_log_data_read_enabled
+    description: "GCP project audit logs must include DATA_READ log type for all services."
+    remediation: "Enable DATA_READ in GCP Console under IAM → Audit Logs, or via gcloud / Terraform."
+
+  - id: C-14
+    title: "Cloud Audit Logs — DATA_WRITE"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: gcp
+    service: logging
+    check: audit_log_data_write_enabled
+    description: "GCP project audit logs must include DATA_WRITE log type for all services."
+    remediation: "Enable DATA_WRITE in GCP Console under IAM → Audit Logs, or via Terraform google_project_iam_audit_config."
+
+  - id: C-15
+    title: "Cloud Audit Logs — ADMIN_READ"
+    article: "Art. 5"
+    gdpr_clause: "Integrity and confidentiality"
+    csp: gcp
+    service: logging
+    check: audit_log_admin_read_enabled
+    description: "GCP project audit logs must include ADMIN_READ log type for all services."
+    remediation: "Enable ADMIN_READ under IAM → Audit Logs in the GCP Console."
+
+  - id: C-16
+    title: "Cloud SQL SSL/TLS Required"
+    article: "Art. 32"
+    gdpr_clause: "Encryption in transit"
+    csp: gcp
+    service: sqladmin
+    check: cloudsql_ssl_required
+    description: "All Cloud SQL instances must require SSL/TLS connections."
+    remediation: "gcloud sql instances patch <instance> --require-ssl"
+
+  - id: C-17
+    title: "Cloud SQL Automated Backups"
+    article: "Art. 32"
+    gdpr_clause: "Ability to restore availability of personal data"
+    csp: gcp
+    service: sqladmin
+    check: cloudsql_backup_enabled
+    description: "All Cloud SQL instances must have automated backups enabled."
+    remediation: "gcloud sql instances patch <instance> --backup-start-time=02:00"
+
+  - id: C-18
+    title: "GCP IAM — No Public Bindings"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: gcp
+    service: iam
+    check: iam_no_public_bindings
+    description: "GCP project IAM policy must not contain allUsers or allAuthenticatedUsers as members."
+    remediation: "Remove public IAM bindings: gcloud projects remove-iam-policy-binding <project> --member='allUsers' --role=<role>"
+
+  - id: C-19
+    title: "Compute Engine Disk CMEK"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: gcp
+    service: compute
+    check: compute_disk_cmek_enabled
+    description: "Persistent disks attached to Compute Engine instances must use CMEK."
+    remediation: "Recreate disks with --kms-key flag or enable project-level default CMEK in Compute Engine settings."
+
+  - id: C-20
+    title: "Secret Manager — Secrets Accessible and Audited"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing confidentiality of processing systems"
+    csp: gcp
+    service: secretmanager
+    check: secret_manager_secrets_exist
+    description: "If Secret Manager is in use, secrets must exist and be versioned (no bare plaintext credential storage)."
+    remediation: "Migrate plaintext credentials to Secret Manager and enable audit logging on the secretmanager.googleapis.com service."

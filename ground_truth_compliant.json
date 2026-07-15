@@ -1,0 +1,23 @@
+{
+  "_comment": "Compliant baseline: all controls = true (no violations). Expected FPR = 0.",
+  "C-01": true,
+  "C-02": true,
+  "C-03": true,
+  "C-04": true,
+  "C-05": true,
+  "C-06": true,
+  "C-07": true,
+  "C-08": true,
+  "C-09": true,
+  "C-10": true,
+  "C-11": true,
+  "C-12": true,
+  "C-13": true,
+  "C-14": true,
+  "C-15": true,
+  "C-16": true,
+  "C-17": true,
+  "C-18": true,
+  "C-19": true,
+  "C-20": true
+}

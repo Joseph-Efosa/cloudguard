@@ -1,0 +1,23 @@
+{
+  "_comment": "Misconfigured variant ground truth. C-01 and C-07 remain true: AWS account-level S3 default encryption and root MFA cannot be disabled via Terraform, so the scanner correctly reports PASS for these in the misconfigured test.",
+  "C-01": true,
+  "C-02": false,
+  "C-03": false,
+  "C-04": false,
+  "C-05": false,
+  "C-06": false,
+  "C-07": true,
+  "C-08": false,
+  "C-09": false,
+  "C-10": false,
+  "C-11": false,
+  "C-12": false,
+  "C-13": false,
+  "C-14": false,
+  "C-15": false,
+  "C-16": false,
+  "C-17": false,
+  "C-18": false,
+  "C-19": false,
+  "C-20": false
+}
