@@ -227,8 +227,8 @@ h1{font-size:1.6rem;margin-bottom:.25rem}
         llm_data: list[dict] = []
 
         try:
-            # Split into two batches (AWS C-01–C-10, GCP C-11–C-20) so each
-            # Ollama call stays well within the timeout budget.
+            # Split into batches of 10 so each Ollama call stays well
+            # within the timeout budget (5 batches for 50 controls).
             batch_size = 10
             for i in range(0, len(results), batch_size):
                 batch = results[i : i + batch_size]

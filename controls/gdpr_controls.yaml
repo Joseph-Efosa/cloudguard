@@ -1,9 +1,9 @@
-version: "1.0"
-description: "CloudGuard GDPR Control Set — Articles 5, 25, 30, 32"
+version: "2.0"
+description: "CloudGuard GDPR Control Set — Articles 5, 25, 30, 32 — 50 controls (C-01–C-25 AWS, C-26–C-50 GCP)"
 
 controls:
 
-  # ── AWS Controls ────────────────────────────────────────────────────────────
+  # ── AWS Controls (C-01 – C-25) ────────────────────────────────────────────
 
   - id: C-01
     title: "S3 Default Server-Side Encryption"
@@ -13,7 +13,7 @@ controls:
     service: s3
     check: s3_encryption_enabled
     description: "All S3 buckets must have default server-side encryption (SSE-S3 or SSE-KMS) enabled."
-    remediation: "Enable default encryption on each S3 bucket: aws s3api put-bucket-encryption --bucket <name> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\"}}]}'"
+    remediation: "Enable default encryption: aws s3api put-bucket-encryption --bucket <name> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\"}}]}'"
 
   - id: C-02
     title: "S3 Block Public Access"
@@ -32,7 +32,7 @@ controls:
     csp: aws
     service: cloudtrail
     check: cloudtrail_multiregion_enabled
-    description: "At least one CloudTrail trail must be multi-region and logging."
+    description: "At least one CloudTrail trail must be multi-region and actively logging."
     remediation: "Create or update a trail with --is-multi-region-trail and ensure logging is active."
 
   - id: C-04
@@ -105,9 +105,159 @@ controls:
     description: "AWS Config must have an active configuration recorder to maintain resource change history."
     remediation: "Start the Config recorder: aws configservice start-configuration-recorder --configuration-recorder-name default"
 
-  # ── GCP Controls ────────────────────────────────────────────────────────────
-
   - id: C-11
+    title: "IAM Password Policy — Minimum Length"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: iam
+    check: iam_password_min_length
+    description: "The IAM account password policy must require a minimum password length of at least 14 characters."
+    remediation: "Update password policy: aws iam update-account-password-policy --minimum-password-length 14"
+
+  - id: C-12
+    title: "IAM Password Policy — Maximum Age"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: iam
+    check: iam_password_max_age
+    description: "The IAM account password policy must require passwords to be changed at least every 90 days."
+    remediation: "Update password policy: aws iam update-account-password-policy --max-password-age 90"
+
+  - id: C-13
+    title: "IAM Password Policy — Prevent Password Reuse"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: iam
+    check: iam_password_reuse
+    description: "The IAM account password policy must prevent reuse of the last 24 passwords."
+    remediation: "Update password policy: aws iam update-account-password-policy --password-reuse-prevention 24"
+
+  - id: C-14
+    title: "VPC Default Security Group — No Open Rules"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: ec2
+    check: vpc_default_sg_no_open_rules
+    description: "The default VPC security group must not allow any inbound or outbound traffic (principle of least privilege)."
+    remediation: "Remove all inbound/outbound rules from the default security group: aws ec2 revoke-security-group-ingress / revoke-security-group-egress"
+
+  - id: C-15
+    title: "EC2 IMDSv2 Required on All Instances"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: ec2
+    check: ec2_imdsv2_required
+    description: "All EC2 instances must require IMDSv2 (HttpTokens=required) to prevent SSRF attacks targeting instance metadata."
+    remediation: "Enforce IMDSv2: aws ec2 modify-instance-metadata-options --instance-id <id> --http-tokens required --http-endpoint enabled"
+
+  - id: C-16
+    title: "CloudWatch Log Groups Encrypted with KMS"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: aws
+    service: logs
+    check: cloudwatch_log_group_encrypted
+    description: "All CloudWatch log groups must be encrypted at rest using a customer-managed KMS key."
+    remediation: "Associate a KMS key: aws logs associate-kms-key --log-group-name <name> --kms-key-id <key-arn>"
+
+  - id: C-17
+    title: "S3 Bucket Access Logging Enabled"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: aws
+    service: s3
+    check: s3_access_logging_enabled
+    description: "S3 bucket access logging must be enabled to maintain records of access to personal data."
+    remediation: "Enable logging: aws s3api put-bucket-logging --bucket <name> --bucket-logging-status '{\"LoggingEnabled\":{\"TargetBucket\":\"<log-bucket>\",\"TargetPrefix\":\"<name>/\"}}'"
+
+  - id: C-18
+    title: "Amazon GuardDuty Detector Active"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: guardduty
+    check: guardduty_detector_active
+    description: "Amazon GuardDuty must have an active detector to provide continuous threat monitoring."
+    remediation: "Enable GuardDuty: aws guardduty create-detector --enable"
+
+  - id: C-19
+    title: "SNS Topics Encrypted at Rest"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: aws
+    service: sns
+    check: sns_topics_encrypted
+    description: "All SNS topics must be encrypted at rest using a KMS key."
+    remediation: "Set KMS key: aws sns set-topic-attributes --topic-arn <arn> --attribute-name KmsMasterKeyId --attribute-value <key-id>"
+
+  - id: C-20
+    title: "SQS Queues Encrypted at Rest"
+    article: "Art. 32"
+    gdpr_clause: "Encryption of personal data"
+    csp: aws
+    service: sqs
+    check: sqs_queues_encrypted
+    description: "All SQS queues must be encrypted at rest using SQS-managed SSE or a KMS key."
+    remediation: "Enable SSE: aws sqs set-queue-attributes --queue-url <url> --attributes SqsManagedSseEnabled=true"
+
+  - id: C-21
+    title: "AWS Secrets Manager in Use"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: aws
+    service: secretsmanager
+    check: secrets_manager_in_use
+    description: "AWS Secrets Manager must be in use to ensure credentials and secrets are not stored in plaintext."
+    remediation: "Migrate plaintext credentials to Secrets Manager: aws secretsmanager create-secret --name <name> --secret-string <value>"
+
+  - id: C-22
+    title: "CloudTrail S3 Bucket Not Publicly Accessible"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: aws
+    service: s3
+    check: cloudtrail_s3_not_public
+    description: "The S3 bucket used by CloudTrail to store audit logs must not be publicly accessible."
+    remediation: "Enable public access block on the CloudTrail bucket: aws s3api put-public-access-block --bucket <trail-bucket> --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+
+  - id: C-23
+    title: "RDS Multi-AZ Deployment Enabled"
+    article: "Art. 32"
+    gdpr_clause: "Ability to restore availability and access to personal data"
+    csp: aws
+    service: rds
+    check: rds_multi_az_enabled
+    description: "All RDS DB instances must have Multi-AZ deployment enabled for high availability and data resilience."
+    remediation: "Modify instance: aws rds modify-db-instance --db-instance-identifier <id> --multi-az --apply-immediately"
+
+  - id: C-24
+    title: "IAM Access Analyser Active"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: aws
+    service: accessanalyzer
+    check: iam_access_analyser_active
+    description: "AWS IAM Access Analyzer must have an active analyser to detect resources shared with external entities."
+    remediation: "Create analyser: aws accessanalyzer create-analyzer --analyzer-name cloudguard-analyser --type ACCOUNT"
+
+  - id: C-25
+    title: "CloudTrail KMS Encryption Enabled"
+    article: "Art. 5"
+    gdpr_clause: "Integrity and confidentiality"
+    csp: aws
+    service: cloudtrail
+    check: cloudtrail_kms_encrypted
+    description: "CloudTrail must encrypt log files at rest using a customer-managed KMS key."
+    remediation: "Update trail: aws cloudtrail update-trail --name <trail> --kms-key-id <key-arn>"
+
+  # ── GCP Controls (C-26 – C-50) ────────────────────────────────────────────
+
+  - id: C-26
     title: "Cloud Storage CMEK Encryption"
     article: "Art. 32"
     gdpr_clause: "Encryption of personal data"
@@ -117,7 +267,7 @@ controls:
     description: "Cloud Storage buckets must use a customer-managed encryption key (CMEK)."
     remediation: "Set a default KMS key on the bucket: gcloud storage buckets update gs://<bucket> --default-encryption-key=<kms-key-resource-id>"
 
-  - id: C-12
+  - id: C-27
     title: "Cloud Storage Public Access Prevention"
     article: "Art. 25"
     gdpr_clause: "Data protection by design and by default"
@@ -127,7 +277,7 @@ controls:
     description: "Cloud Storage buckets must have publicAccessPrevention set to 'enforced'."
     remediation: "gcloud storage buckets update gs://<bucket> --public-access-prevention"
 
-  - id: C-13
+  - id: C-28
     title: "Cloud Audit Logs — DATA_READ"
     article: "Art. 30"
     gdpr_clause: "Records of processing activities"
@@ -137,7 +287,7 @@ controls:
     description: "GCP project audit logs must include DATA_READ log type for all services."
     remediation: "Enable DATA_READ in GCP Console under IAM → Audit Logs, or via gcloud / Terraform."
 
-  - id: C-14
+  - id: C-29
     title: "Cloud Audit Logs — DATA_WRITE"
     article: "Art. 30"
     gdpr_clause: "Records of processing activities"
@@ -147,7 +297,7 @@ controls:
     description: "GCP project audit logs must include DATA_WRITE log type for all services."
     remediation: "Enable DATA_WRITE in GCP Console under IAM → Audit Logs, or via Terraform google_project_iam_audit_config."
 
-  - id: C-15
+  - id: C-30
     title: "Cloud Audit Logs — ADMIN_READ"
     article: "Art. 5"
     gdpr_clause: "Integrity and confidentiality"
@@ -157,7 +307,7 @@ controls:
     description: "GCP project audit logs must include ADMIN_READ log type for all services."
     remediation: "Enable ADMIN_READ under IAM → Audit Logs in the GCP Console."
 
-  - id: C-16
+  - id: C-31
     title: "Cloud SQL SSL/TLS Required"
     article: "Art. 32"
     gdpr_clause: "Encryption in transit"
@@ -167,7 +317,7 @@ controls:
     description: "All Cloud SQL instances must require SSL/TLS connections."
     remediation: "gcloud sql instances patch <instance> --require-ssl"
 
-  - id: C-17
+  - id: C-32
     title: "Cloud SQL Automated Backups"
     article: "Art. 32"
     gdpr_clause: "Ability to restore availability of personal data"
@@ -177,7 +327,7 @@ controls:
     description: "All Cloud SQL instances must have automated backups enabled."
     remediation: "gcloud sql instances patch <instance> --backup-start-time=02:00"
 
-  - id: C-18
+  - id: C-33
     title: "GCP IAM — No Public Bindings"
     article: "Art. 25"
     gdpr_clause: "Data protection by design and by default"
@@ -187,7 +337,7 @@ controls:
     description: "GCP project IAM policy must not contain allUsers or allAuthenticatedUsers as members."
     remediation: "Remove public IAM bindings: gcloud projects remove-iam-policy-binding <project> --member='allUsers' --role=<role>"
 
-  - id: C-19
+  - id: C-34
     title: "Compute Engine Disk CMEK"
     article: "Art. 32"
     gdpr_clause: "Encryption of personal data"
@@ -197,7 +347,7 @@ controls:
     description: "Persistent disks attached to Compute Engine instances must use CMEK."
     remediation: "Recreate disks with --kms-key flag or enable project-level default CMEK in Compute Engine settings."
 
-  - id: C-20
+  - id: C-35
     title: "Secret Manager — Secrets Accessible and Audited"
     article: "Art. 32"
     gdpr_clause: "Ongoing confidentiality of processing systems"
@@ -206,3 +356,153 @@ controls:
     check: secret_manager_secrets_exist
     description: "If Secret Manager is in use, secrets must exist and be versioned (no bare plaintext credential storage)."
     remediation: "Migrate plaintext credentials to Secret Manager and enable audit logging on the secretmanager.googleapis.com service."
+
+  - id: C-36
+    title: "Cloud KMS Key Destruction Schedule ≥ 7 Days"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing confidentiality of processing systems"
+    csp: gcp
+    service: cloudkms
+    check: kms_key_destruction_delay
+    description: "All Cloud KMS cryptographic keys must have a destruction schedule of at least 7 days to allow recovery from accidental deletion."
+    remediation: "Keys must be recreated with a longer destruction schedule: gcloud kms keys create <key> --keyring <ring> --location <loc> --purpose encryption --destroy-scheduled-duration 7d"
+
+  - id: C-37
+    title: "VPC Firewall — No Unrestricted SSH Access"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: gcp
+    service: compute
+    check: firewall_no_open_ssh
+    description: "No VPC firewall rule may allow unrestricted inbound SSH (TCP port 22) from 0.0.0.0/0 or ::/0."
+    remediation: "Delete or restrict the rule: gcloud compute firewall-rules update <rule> --source-ranges=<trusted-cidr>"
+
+  - id: C-38
+    title: "VPC Firewall — No Unrestricted RDP Access"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: gcp
+    service: compute
+    check: firewall_no_open_rdp
+    description: "No VPC firewall rule may allow unrestricted inbound RDP (TCP port 3389) from 0.0.0.0/0 or ::/0."
+    remediation: "Restrict the rule to trusted IP ranges: gcloud compute firewall-rules update <rule> --source-ranges=<trusted-cidr>"
+
+  - id: C-39
+    title: "Cloud Storage Uniform Bucket-Level Access"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: gcp
+    service: storage
+    check: gcs_uniform_bucket_access
+    description: "All Cloud Storage buckets must have Uniform Bucket-Level Access enabled to prevent object-level ACL overrides."
+    remediation: "Enable: gcloud storage buckets update gs://<bucket> --uniform-bucket-level-access"
+
+  - id: C-40
+    title: "Cloud SQL — No Authorised Public Networks"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: gcp
+    service: sqladmin
+    check: cloudsql_no_public_ip
+    description: "Cloud SQL instances must not have authorised public networks (no external IP access)."
+    remediation: "Remove authorised networks and disable public IP: gcloud sql instances patch <instance> --no-assign-ip"
+
+  - id: C-41
+    title: "Compute Engine — Serial Port Access Disabled"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: gcp
+    service: compute
+    check: compute_serial_port_disabled
+    description: "Serial port access must be disabled on all Compute Engine instances to prevent unauthorised console access."
+    remediation: "Disable via metadata: gcloud compute instances add-metadata <instance> --metadata serial-port-enable=false"
+
+  - id: C-42
+    title: "Cloud Logging — Log Export Sink Exists"
+    article: "Art. 30"
+    gdpr_clause: "Records of processing activities"
+    csp: gcp
+    service: logging
+    check: logging_sink_exists
+    description: "At least one Cloud Logging export sink must be configured to ensure long-term retention of audit records."
+    remediation: "Create a log sink: gcloud logging sinks create <name> storage.googleapis.com/<bucket>"
+
+  - id: C-43
+    title: "Compute Engine — OS Login Enabled"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: gcp
+    service: compute
+    check: compute_oslogin_enabled
+    description: "OS Login must be enabled at the project level to centralise SSH access management through Cloud IAM."
+    remediation: "Enable project-wide: gcloud compute project-info add-metadata --metadata enable-oslogin=TRUE"
+
+  - id: C-44
+    title: "Cloud SQL — Deletion Protection Enabled"
+    article: "Art. 32"
+    gdpr_clause: "Ability to restore availability of personal data"
+    csp: gcp
+    service: sqladmin
+    check: cloudsql_deletion_protection
+    description: "All Cloud SQL instances must have deletion protection enabled to prevent accidental permanent data loss."
+    remediation: "Enable: gcloud sql instances patch <instance> --deletion-protection"
+
+  - id: C-45
+    title: "GCP IAM — Service Accounts Not Assigned Admin Roles"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: gcp
+    service: iam
+    check: iam_no_service_account_admin
+    description: "No service account should be assigned project Owner, Editor, or other admin-level IAM roles."
+    remediation: "Remove admin roles from service accounts: gcloud projects remove-iam-policy-binding <project> --member='serviceAccount:<sa>' --role=<role>"
+
+  - id: C-46
+    title: "Compute Engine — Shielded VM Enabled"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing ability to ensure integrity and confidentiality"
+    csp: gcp
+    service: compute
+    check: compute_shielded_vm_enabled
+    description: "All Compute Engine instances must have Shielded VM features enabled (vTPM and Integrity Monitoring)."
+    remediation: "Enable Shielded VM: gcloud compute instances update <instance> --zone <zone> --shielded-vtpm --shielded-integrity-monitoring"
+
+  - id: C-47
+    title: "Cloud Storage Versioning Enabled"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design"
+    csp: gcp
+    service: storage
+    check: gcs_versioning_enabled
+    description: "Cloud Storage buckets storing personal data must have versioning enabled to support right-to-erasure audit trails."
+    remediation: "Enable versioning: gcloud storage buckets update gs://<bucket> --versioning"
+
+  - id: C-48
+    title: "GCP IAM — Service Account Keys Rotated Within 90 Days"
+    article: "Art. 32"
+    gdpr_clause: "Ongoing confidentiality of processing systems"
+    csp: gcp
+    service: iam
+    check: iam_service_account_key_rotation
+    description: "All user-managed service account keys must have been created within the last 90 days."
+    remediation: "Delete old keys and create new ones: gcloud iam service-accounts keys delete <key-id> --iam-account <sa-email>"
+
+  - id: C-49
+    title: "Cloud SQL — Point-in-Time Recovery Enabled"
+    article: "Art. 32"
+    gdpr_clause: "Ability to restore availability of personal data"
+    csp: gcp
+    service: sqladmin
+    check: cloudsql_pitr_enabled
+    description: "All Cloud SQL instances must have point-in-time recovery (PITR) enabled."
+    remediation: "Enable PITR: gcloud sql instances patch <instance> --enable-point-in-time-recovery"
+
+  - id: C-50
+    title: "Compute Engine — Default Service Account Not Used"
+    article: "Art. 25"
+    gdpr_clause: "Data protection by design and by default"
+    csp: gcp
+    service: compute
+    check: compute_no_default_service_account
+    description: "Compute Engine instances must not use the default compute service account, which has broad project Editor permissions."
+    remediation: "Assign a dedicated least-privilege service account: gcloud compute instances set-service-account <instance> --zone <zone> --service-account <custom-sa>"
