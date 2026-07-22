@@ -100,22 +100,47 @@ export AWS_DEFAULT_REGION="eu-west-1"
 **Required IAM permissions:**
 
 The AWS identity must have read-only access to the following services:
-`s3`, `cloudtrail`, `rds`, `kms`, `iam`, `ec2`, `config`
+`s3`, `cloudtrail`, `rds`, `kms`, `iam`, `ec2`, `config`, `logs`, `guardduty`, `sns`, `sqs`, `secretsmanager`, `access-analyzer`
 
-A minimal policy is:
+A minimal policy covering all 25 AWS controls (C-01–C-25):
 ```json
 {
-  "Effect": "Allow",
-  "Action": [
-    "s3:GetBucketEncryption", "s3:GetBucketPublicAccessBlock", "s3:GetBucketVersioning", "s3:ListAllMyBuckets",
-    "cloudtrail:DescribeTrails", "cloudtrail:GetTrailStatus",
-    "rds:DescribeDBInstances",
-    "kms:ListKeys", "kms:GetKeyRotationStatus", "kms:DescribeKey",
-    "iam:GenerateCredentialReport", "iam:GetCredentialReport",
-    "ec2:GetEbsEncryptionByDefault",
-    "config:DescribeConfigurationRecorderStatus"
-  ],
-  "Resource": "*"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets",
+        "s3:GetBucketEncryption",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketLogging",
+        "cloudtrail:DescribeTrails",
+        "cloudtrail:GetTrailStatus",
+        "rds:DescribeDBInstances",
+        "kms:ListKeys",
+        "kms:DescribeKey",
+        "kms:GetKeyRotationStatus",
+        "iam:GetAccountSummary",
+        "iam:GetAccountPasswordPolicy",
+        "ec2:GetEbsEncryptionByDefault",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeInstances",
+        "config:DescribeConfigurationRecorders",
+        "config:DescribeConfigurationRecorderStatus",
+        "logs:DescribeLogGroups",
+        "guardduty:ListDetectors",
+        "guardduty:GetDetector",
+        "sns:ListTopics",
+        "sns:GetTopicAttributes",
+        "sqs:ListQueues",
+        "sqs:GetQueueAttributes",
+        "secretsmanager:ListSecrets",
+        "access-analyzer:ListAnalyzers"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
@@ -135,13 +160,16 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
 
 **Required IAM roles** (on the target project):
 
-| Role | Purpose |
-|---|---|
-| `roles/storage.admin` (or `roles/storage.objectViewer`) | Read bucket metadata |
-| `roles/logging.viewer` | Read audit log configuration |
-| `roles/cloudsql.viewer` | Read Cloud SQL instance settings |
-| `roles/iam.securityReviewer` | Read IAM policy bindings |
-| `roles/compute.viewer` | Read disk encryption configuration |
+| Role | Controls | Purpose |
+|---|---|---|
+| `roles/storage.objectViewer` | C-26, C-27, C-39, C-47 | Read bucket metadata, IAM config, versioning |
+| `roles/logging.viewer` | C-28, C-29, C-30 | Read project audit log configuration |
+| `roles/logging.configWriter` | C-42 | Read log export sinks (`logging.sinks.list`) |
+| `roles/cloudsql.viewer` | C-31, C-32, C-40, C-44, C-49 | Read Cloud SQL instance settings |
+| `roles/iam.securityReviewer` | C-33, C-45, C-48 | Read IAM policy bindings and service accounts |
+| `roles/compute.viewer` | C-34, C-37, C-38, C-41, C-43, C-46, C-50 | Read Compute Engine resources and firewall rules |
+| `roles/cloudkms.viewer` | C-36 | Read Cloud KMS key destruction schedules |
+| `roles/secretmanager.viewer` | C-35 | Read Secret Manager secrets and versions |
 | `roles/secretmanager.viewer` | Read secret metadata |
 
 A single custom role combining `*.get` and `*.list` permissions on all services is sufficient.

@@ -13,7 +13,8 @@ from pathlib import Path
 
 from cloudguard.engine import ControlEngine
 from cloudguard.evaluator import compute_metrics
-from cloudguard.reporter import write_html, write_json
+from cloudguard.reporter import write_results_json
+from cloudguard.llm_reporter import LLMReporter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -102,8 +103,8 @@ def main() -> int:
         "gcp_project": args.gcp_project,
         "csp_filter": args.csp,
     }
-    write_json(results, summary, json_path, scan_meta)
-    write_html(results, summary, html_path)
+    write_results_json(results, summary, json_path, scan_meta)
+    LLMReporter().write_html(results, summary, html_path)
 
     # ── console summary ───────────────────────────────────────────────────────
     print("\n" + "═" * 60)

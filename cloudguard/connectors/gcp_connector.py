@@ -344,7 +344,10 @@ class GCPConnector:
             kr_resp = self.kms_client.projects().locations().keyRings().list(
                 parent=loc["name"]
             ).execute()
-            for kr in kr_resp.get("keyRings", []):
+            key_rings = kr_resp.get("keyRings", [])
+            if not key_rings:
+                continue  # skip locations with no key rings
+            for kr in key_rings:
                 keys_resp = self.kms_client.projects().locations().keyRings().cryptoKeys().list(
                     parent=kr["name"]
                 ).execute()
